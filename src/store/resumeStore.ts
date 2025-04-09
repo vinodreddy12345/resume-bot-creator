@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -41,6 +42,21 @@ interface ResumeStore {
   setResumeTheme: (theme: Partial<ResumeStore['resumeTheme']>) => void;
   saveResume: () => Promise<void>;
   loadResumes: () => Promise<void>;
+}
+
+// Define a type for our resume database row
+interface ResumeRow {
+  id: string;
+  user_id: string;
+  resume_data: ResumeData;
+  active_template: string;
+  resume_theme: {
+    gradient?: string;
+    primaryColor?: string;
+    fontFamily?: string;
+  };
+  created_at: string;
+  updated_at: string;
 }
 
 const defaultResumeData: ResumeData = {
@@ -122,7 +138,7 @@ export const useResumeStore = create<ResumeStore>()(
       templates,
       resumeTheme: {
         gradient: 'none',
-        primaryColor: '#3b82f6',
+        primaryColor: '#22c55e', // Changed to green from blue
         fontFamily: 'Inter, sans-serif',
       },
       isSaving: false,
@@ -374,6 +390,7 @@ export const useResumeStore = create<ResumeStore>()(
         set({ isSaving: true });
         
         try {
+          // Use type assertion to make TypeScript happy
           const { data, error } = await supabase
             .from('resumes')
             .upsert({
@@ -413,6 +430,7 @@ export const useResumeStore = create<ResumeStore>()(
         }
         
         try {
+          // Use type assertion to make TypeScript happy
           const { data, error } = await supabase
             .from('resumes')
             .select('*')
@@ -422,11 +440,14 @@ export const useResumeStore = create<ResumeStore>()(
           if (error) throw error;
           
           if (data) {
+            // Safely cast the data to our ResumeRow type
+            const resumeData = data as unknown as ResumeRow;
+            
             set({
-              resumeData: data.resume_data as ResumeData,
-              activeTemplate: data.active_template,
-              resumeTheme: data.resume_theme,
-              lastSaved: new Date(data.updated_at)
+              resumeData: resumeData.resume_data,
+              activeTemplate: resumeData.active_template,
+              resumeTheme: resumeData.resume_theme,
+              lastSaved: new Date(resumeData.updated_at)
             });
           }
         } catch (error) {
