@@ -1,8 +1,9 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { ResumeData, ResumeTemplate, ResumeTheme } from '@/types/resume';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface ResumeStore {
   resumeData: ResumeData;
@@ -13,6 +14,9 @@ interface ResumeStore {
     primaryColor?: string;
     fontFamily?: string;
   };
+  isSaving: boolean;
+  lastSaved: Date | null;
+  
   updatePersonal: (personal: Partial<ResumeData['personal']>) => void;
   addExperience: () => void;
   updateExperience: (id: string, experience: Partial<Omit<ResumeData['experience'][0], 'id'>>) => void;
@@ -35,6 +39,8 @@ interface ResumeStore {
   setResumeData: (data: ResumeData) => void;
   setActiveTemplate: (templateId: string) => void;
   setResumeTheme: (theme: Partial<ResumeStore['resumeTheme']>) => void;
+  saveResume: () => Promise<void>;
+  loadResumes: () => Promise<void>;
 }
 
 const defaultResumeData: ResumeData = {
@@ -110,7 +116,7 @@ const templates: ResumeTemplate[] = [
 
 export const useResumeStore = create<ResumeStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       resumeData: defaultResumeData,
       activeTemplate: 'modern',
       templates,
@@ -119,6 +125,8 @@ export const useResumeStore = create<ResumeStore>()(
         primaryColor: '#3b82f6',
         fontFamily: 'Inter, sans-serif',
       },
+      isSaving: false,
+      lastSaved: null,
       
       updatePersonal: (personal) => 
         set((state) => ({
@@ -240,7 +248,7 @@ export const useResumeStore = create<ResumeStore>()(
             skills: state.resumeData.skills.filter((s) => s.id !== id),
           },
         })),
-
+      
       addProject: () =>
         set((state) => ({
           resumeData: {
@@ -256,7 +264,7 @@ export const useResumeStore = create<ResumeStore>()(
             ],
           },
         })),
-
+      
       updateProject: (id, project) =>
         set((state) => ({
           resumeData: {
@@ -266,7 +274,7 @@ export const useResumeStore = create<ResumeStore>()(
             ) || [],
           },
         })),
-
+      
       removeProject: (id) =>
         set((state) => ({
           resumeData: {
@@ -274,7 +282,7 @@ export const useResumeStore = create<ResumeStore>()(
             projects: state.resumeData.projects?.filter((p) => p.id !== id) || [],
           },
         })),
-
+      
       addCertification: () =>
         set((state) => ({
           resumeData: {
@@ -290,7 +298,7 @@ export const useResumeStore = create<ResumeStore>()(
             ],
           },
         })),
-
+      
       updateCertification: (id, certification) =>
         set((state) => ({
           resumeData: {
@@ -300,7 +308,7 @@ export const useResumeStore = create<ResumeStore>()(
             ) || [],
           },
         })),
-
+      
       removeCertification: (id) =>
         set((state) => ({
           resumeData: {
@@ -308,7 +316,7 @@ export const useResumeStore = create<ResumeStore>()(
             certifications: state.resumeData.certifications?.filter((c) => c.id !== id) || [],
           },
         })),
-
+      
       addLanguage: () =>
         set((state) => ({
           resumeData: {
@@ -323,7 +331,7 @@ export const useResumeStore = create<ResumeStore>()(
             ],
           },
         })),
-
+      
       updateLanguage: (id, language) =>
         set((state) => ({
           resumeData: {
@@ -333,7 +341,7 @@ export const useResumeStore = create<ResumeStore>()(
             ) || [],
           },
         })),
-
+      
       removeLanguage: (id) =>
         set((state) => ({
           resumeData: {
@@ -349,6 +357,82 @@ export const useResumeStore = create<ResumeStore>()(
       setResumeTheme: (theme) => set((state) => ({
         resumeTheme: { ...state.resumeTheme, ...theme }
       })),
+      
+      saveResume: async () => {
+        const state = get();
+        const user = (await supabase.auth.getUser()).data.user;
+        
+        if (!user) {
+          toast({
+            title: "Error",
+            description: "You must be logged in to save your resume",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        set({ isSaving: true });
+        
+        try {
+          const { data, error } = await supabase
+            .from('resumes')
+            .upsert({
+              user_id: user.id,
+              resume_data: state.resumeData,
+              active_template: state.activeTemplate,
+              resume_theme: state.resumeTheme,
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' })
+            .select();
+          
+          if (error) throw error;
+          
+          set({ lastSaved: new Date() });
+          
+          toast({
+            title: "Resume Saved",
+            description: "Your resume has been saved successfully",
+          });
+        } catch (error: any) {
+          console.error('Error saving resume:', error);
+          toast({
+            title: "Error",
+            description: error.message || "Failed to save resume",
+            variant: "destructive",
+          });
+        } finally {
+          set({ isSaving: false });
+        }
+      },
+      
+      loadResumes: async () => {
+        const user = (await supabase.auth.getUser()).data.user;
+        
+        if (!user) {
+          return;
+        }
+        
+        try {
+          const { data, error } = await supabase
+            .from('resumes')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (error) throw error;
+          
+          if (data) {
+            set({
+              resumeData: data.resume_data as ResumeData,
+              activeTemplate: data.active_template,
+              resumeTheme: data.resume_theme,
+              lastSaved: new Date(data.updated_at)
+            });
+          }
+        } catch (error) {
+          console.error('Error loading resumes:', error);
+        }
+      }
     }),
     {
       name: 'resume-storage',

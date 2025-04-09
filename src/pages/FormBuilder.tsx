@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useResumeStore } from '@/store/resumeStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { useAuth } from '@/contexts/AuthContext';
 
 const FormBuilder = () => {
   const {
@@ -42,6 +43,10 @@ const FormBuilder = () => {
     removeLanguage,
     setResumeTheme,
     resumeTheme,
+    saveResume,
+    loadResumes,
+    isSaving,
+    lastSaved
   } = useResumeStore();
   
   const [activeTab, setActiveTab] = useState('personal');
@@ -49,12 +54,17 @@ const FormBuilder = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resumePreviewRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
   
-  const handleSave = () => {
-    toast({
-      title: "Resume Saved",
-      description: "Your resume has been saved successfully.",
-    });
+  // Load resume data when component mounts and user is authenticated
+  useEffect(() => {
+    if (user) {
+      loadResumes();
+    }
+  }, [user, loadResumes]);
+  
+  const handleSave = async () => {
+    await saveResume();
   };
 
   const handleProfilePictureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,15 +132,31 @@ const FormBuilder = () => {
     { id: 'purple-pink', name: 'Purple to Pink', value: 'linear-gradient(90deg, hsla(277, 75%, 84%, 1) 0%, hsla(297, 50%, 51%, 1) 100%)' },
   ];
 
+  const formatLastSaved = () => {
+    if (!lastSaved) return null;
+    
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(lastSaved);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Resume Builder</h1>
-          <div className="flex space-x-2">
-            <Button onClick={handleSave}>
+          <div className="flex space-x-2 items-center">
+            {lastSaved && (
+              <span className="text-xs text-muted-foreground mr-2">
+                Last saved: {formatLastSaved()}
+              </span>
+            )}
+            <Button onClick={handleSave} disabled={isSaving}>
               <Save className="mr-2 h-4 w-4" />
-              Save
+              {isSaving ? "Saving..." : "Save"}
             </Button>
             <Button onClick={handleDownloadPDF} variant="outline">
               <Download className="mr-2 h-4 w-4" />
