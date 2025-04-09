@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ResumeData, ResumeTemplate, ResumeTheme } from '@/types/resume';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Json } from '@/integrations/supabase/types';
 
 interface ResumeStore {
   resumeData: ResumeData;
@@ -390,14 +391,14 @@ export const useResumeStore = create<ResumeStore>()(
         set({ isSaving: true });
         
         try {
-          // Use type assertion to make TypeScript happy
+          // Cast the resume data to Json type for Supabase
           const { data, error } = await supabase
             .from('resumes')
             .upsert({
               user_id: user.id,
-              resume_data: state.resumeData,
+              resume_data: state.resumeData as unknown as Json,
               active_template: state.activeTemplate,
-              resume_theme: state.resumeTheme,
+              resume_theme: state.resumeTheme as unknown as Json,
               updated_at: new Date().toISOString()
             }, { onConflict: 'user_id' })
             .select();
@@ -430,7 +431,6 @@ export const useResumeStore = create<ResumeStore>()(
         }
         
         try {
-          // Use type assertion to make TypeScript happy
           const { data, error } = await supabase
             .from('resumes')
             .select('*')
