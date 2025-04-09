@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -112,8 +112,19 @@ const Auth = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Welcome</CardTitle>
-            <CardDescription>
+            <div className="flex items-center justify-between">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0 mr-2" 
+                onClick={() => navigate('/landing')}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <CardTitle className="flex-grow text-center">Welcome</CardTitle>
+              <div className="w-8"></div> {/* Spacer for alignment */}
+            </div>
+            <CardDescription className="text-center">
               Sign in to your account or create a new one
             </CardDescription>
           </CardHeader>

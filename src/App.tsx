@@ -12,20 +12,29 @@ import ChatBot from "@/pages/ChatBot";
 import UploadResume from "@/pages/UploadResume";
 import JobTailor from "@/pages/JobTailor";
 import Auth from "@/pages/Auth";
+import Landing from "@/pages/Landing";
 import NotFound from "./pages/NotFound";
+import { useEffect, useState } from "react";
 
 const queryClient = new QueryClient();
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const [isGuest, setIsGuest] = useState<boolean>(false);
+  
+  useEffect(() => {
+    // Check if user is a guest
+    const guestStatus = localStorage.getItem('isGuest') === 'true';
+    setIsGuest(guestStatus);
+  }, []);
   
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
-  if (!user) {
-    return <Navigate to="/auth" replace />;
+  if (!user && !isGuest) {
+    return <Navigate to="/landing" replace />;
   }
   
   return <>{children}</>;
@@ -39,6 +48,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            <Route path="/landing" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route element={
               <ProtectedRoute>

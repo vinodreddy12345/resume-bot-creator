@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { FileText, MessageSquare, Upload, Briefcase, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +17,18 @@ import {
 
 export function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const [isGuest, setIsGuest] = useState(false);
+  const [guestName, setGuestName] = useState('');
+  
+  useEffect(() => {
+    const guestStatus = localStorage.getItem('isGuest') === 'true';
+    setIsGuest(guestStatus);
+    if (guestStatus) {
+      setGuestName(localStorage.getItem('guestName') || 'Guest');
+    }
+  }, []);
   
   const navItems = [
     { name: 'Form Builder', path: '/', icon: FileText },
@@ -26,7 +37,20 @@ export function Layout() {
     { name: 'Job Tailor', path: '/job-tailor', icon: Briefcase }
   ];
 
-  const userInitials = user?.email ? user.email.substring(0, 2).toUpperCase() : 'U';
+  const userInitials = isGuest 
+    ? guestName.substring(0, 2).toUpperCase() 
+    : (user?.email ? user.email.substring(0, 2).toUpperCase() : 'U');
+
+  const handleSignOut = async () => {
+    if (isGuest) {
+      // Clear guest info
+      localStorage.removeItem('isGuest');
+      localStorage.removeItem('guestName');
+      navigate('/landing');
+    } else {
+      await signOut();
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -64,11 +88,22 @@ export function Layout() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  {isGuest ? `Guest: ${guestName}` : 'My Account'}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer" onClick={signOut}>
+                {isGuest && (
+                  <DropdownMenuItem 
+                    className="cursor-pointer" 
+                    onClick={() => navigate('/auth')}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Sign In / Sign Up</span>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{isGuest ? 'Exit Guest Mode' : 'Log out'}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
