@@ -8,6 +8,7 @@ export interface ResumeData {
     location: string;
     website?: string;
     summary: string;
+    profilePicture?: string;
   };
   experience: Experience[];
   education: Education[];
@@ -15,6 +16,7 @@ export interface ResumeData {
   projects?: Project[];
   certifications?: Certification[];
   languages?: Language[];
+  customSections?: CustomSection[];
 }
 
 export interface Experience {
@@ -68,8 +70,29 @@ export interface Language {
   proficiency: 'Elementary' | 'Limited Working' | 'Professional Working' | 'Full Professional' | 'Native';
 }
 
+export interface CustomSection {
+  id: string;
+  title: string;
+  items: CustomSectionItem[];
+}
+
+export interface CustomSectionItem {
+  id: string;
+  title: string;
+  description: string;
+}
+
 export interface ResumeTemplate {
   id: string;
   name: string;
   thumbnail: string;
+}
+
+export interface ResumeTheme {
+  id: string;
+  name: string;
+  primaryColor: string;
+  secondaryColor: string;
+  fontFamily: string;
+  gradient?: string;
 }
