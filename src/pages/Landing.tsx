@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +10,22 @@ import { useToast } from '@/components/ui/use-toast';
 const Landing = () => {
   const [guestName, setGuestName] = useState('');
   const [showNameInput, setShowNameInput] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Check if user is already a guest when component mounts
+  useEffect(() => {
+    const guestStatus = localStorage.getItem('isGuest') === 'true';
+    const name = localStorage.getItem('guestName');
+    
+    if (guestStatus && name) {
+      setIsGuest(true);
+      setGuestName(name);
+      // Skip the name input if already a guest
+      navigate('/');
+    }
+  }, [navigate]);
 
   const handleContinueAsGuest = () => {
     if (showNameInput) {
@@ -36,6 +50,11 @@ const Landing = () => {
   const handleGoToLogin = () => {
     navigate('/auth');
   };
+
+  // If already logged in as guest, redirect to home
+  if (isGuest) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex flex-col">

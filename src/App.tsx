@@ -11,6 +11,7 @@ import FormBuilder from "@/pages/FormBuilder";
 import ChatBot from "@/pages/ChatBot";
 import UploadResume from "@/pages/UploadResume";
 import JobTailor from "@/pages/JobTailor";
+import JobSearch from "@/pages/JobSearch";
 import Auth from "@/pages/Auth";
 import Landing from "@/pages/Landing";
 import NotFound from "./pages/NotFound";
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="/chat" element={<ChatBot />} />
               <Route path="/upload" element={<UploadResume />} />
               <Route path="/job-tailor" element={<JobTailor />} />
+              <Route path="/job-search" element={<JobSearch />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

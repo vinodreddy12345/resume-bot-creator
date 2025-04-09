@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, MessageSquare, Upload, Briefcase, LogOut, User } from 'lucide-react';
+import { FileText, MessageSquare, Upload, Briefcase, LogOut, User, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,8 @@ export function Layout() {
     { name: 'Form Builder', path: '/', icon: FileText },
     { name: 'AI Chat', path: '/chat', icon: MessageSquare },
     { name: 'Upload Resume', path: '/upload', icon: Upload },
-    { name: 'Job Tailor', path: '/job-tailor', icon: Briefcase }
+    { name: 'Job Tailor', path: '/job-tailor', icon: Briefcase },
+    { name: 'Job Search', path: '/job-search', icon: Search }
   ];
 
   const userInitials = isGuest 
