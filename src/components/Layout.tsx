@@ -1,144 +1,149 @@
 
-import React, { useEffect, useState } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, MessageSquare, Upload, Briefcase, LogOut, User, Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useState } from 'react';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
+import { FileText, Upload, Wand2, MessageSquare, Briefcase, Menu, X, User, LogOut } from 'lucide-react';
+import { useMobile } from '@/hooks/use-mobile';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
-export function Layout() {
-  const location = useLocation();
+const Layout = () => {
+  const { isAuthenticated, logout, guestName, isGuest } = useAuth();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  const [isGuest, setIsGuest] = useState(false);
-  const [guestName, setGuestName] = useState('');
+  const location = useLocation();
+  const isMobile = useMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
   
-  useEffect(() => {
-    const guestStatus = localStorage.getItem('isGuest') === 'true';
-    setIsGuest(guestStatus);
-    if (guestStatus) {
-      setGuestName(localStorage.getItem('guestName') || 'Guest');
-    }
-  }, []);
-  
-  const navItems = [
-    { name: 'Form Builder', path: '/', icon: FileText },
-    { name: 'Upload Resume', path: '/upload', icon: Upload },
-    { name: 'Job Tailor', path: '/job-tailor', icon: Briefcase },
-    { name: 'Job Search', path: '/job-search', icon: Search }
-  ];
-
-  const userInitials = isGuest 
-    ? guestName.substring(0, 2).toUpperCase() 
-    : (user?.email ? user.email.substring(0, 2).toUpperCase() : 'U');
-
-  const handleSignOut = async () => {
-    if (isGuest) {
-      // Clear guest info
-      localStorage.removeItem('isGuest');
-      localStorage.removeItem('guestName');
-      navigate('/landing');
-    } else {
-      await signOut();
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
     }
   };
 
+  const navItems = [
+    { name: 'Builder', path: '/builder', icon: <FileText className="w-5 h-5" /> },
+    { name: 'Upload Resume', path: '/upload', icon: <Upload className="w-5 h-5" /> },
+    { name: 'Job Tailor', path: '/tailor', icon: <Wand2 className="w-5 h-5" /> },
+    { name: 'Jobs', path: '/jobs', icon: <Briefcase className="w-5 h-5" /> },
+    { name: 'AI Assistant', path: '/assistant', icon: <MessageSquare className="w-5 h-5" /> },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-primary text-primary-foreground py-4 px-6">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold">ResumeAI</Link>
-          
-          <div className="flex items-center gap-4">
-            <nav className="hidden md:flex space-x-4">
-              {navItems.map((item) => (
-                <Link 
-                  key={item.path} 
-                  to={item.path}
-                  className={cn(
-                    "px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    location.pathname === item.path 
-                      ? "bg-primary-foreground text-primary" 
-                      : "text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
-                  )}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar>
-                    <AvatarImage src="" />
-                    <AvatarFallback className="bg-primary-foreground text-primary">
-                      {userInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuLabel>
-                  {isGuest ? `Guest: ${guestName}` : 'My Account'}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {isGuest && (
-                  <DropdownMenuItem 
-                    className="cursor-pointer" 
-                    onClick={() => navigate('/auth')}
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Sign In / Sign Up</span>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>{isGuest ? 'Exit Guest Mode' : 'Log out'}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+    <div className="flex min-h-screen bg-background">
+      {/* Mobile Sidebar Toggle */}
+      {isMobile && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed top-4 left-4 z-50"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </Button>
+      )}
+
+      {/* Sidebar */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-40 w-64 border-r transform transition-transform duration-300 bg-background ${
+          isMobile ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'
+        }`}
+      >
+        <div className="h-16 flex items-center border-b px-6">
+          <Link to="/dashboard" className="flex items-center">
+            <FileText className="h-6 w-6 mr-2 text-primary" />
+            <span className="font-bold text-xl">ResumeBuilder</span>
+          </Link>
+        </div>
+        
+        <nav className="p-4 space-y-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center h-10 px-3 py-2 text-base rounded-md transition-colors ${
+                location.pathname === item.path ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'
+              }`}
+              onClick={() => isMobile && setSidebarOpen(false)}
+            >
+              {item.icon}
+              <span className="ml-3">{item.name}</span>
+            </Link>
+          ))}
+        </nav>
+        
+        <div className="absolute bottom-0 w-full p-4 border-t">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <div className="bg-primary/20 w-8 h-8 rounded-full flex items-center justify-center mr-2">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">
+                  {isGuest ? guestName : 'User'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {isGuest ? 'Guest User' : 'Logged In'}
+                </p>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setConfirmLogoutOpen(true)}>
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-      </header>
-      
-      <main className="flex-1 container mx-auto p-6">
-        <Outlet />
-      </main>
-      
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border py-2 px-6">
-        <div className="flex justify-around">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link 
-                key={item.path} 
-                to={item.path}
-                className={cn(
-                  "flex flex-col items-center p-2 rounded-md text-xs",
-                  location.pathname === item.path 
-                    ? "text-primary" 
-                    : "text-muted-foreground"
-                )}
-              >
-                <Icon className="h-5 w-5 mb-1" />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
+      </aside>
+
+      {/* Main Content */}
+      <main 
+        className={`flex-1 ${
+          !isMobile ? 'ml-64' : ''
+        } min-h-screen`}
+      >
+        <div className="max-w-6xl mx-auto py-6 sm:px-6 lg:px-8">
+          <Outlet />
         </div>
-      </nav>
+      </main>
+
+      {/* Mobile background overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={confirmLogoutOpen} onOpenChange={setConfirmLogoutOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Logout</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to log out?
+              {isGuest && " This will clear your guest session."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmLogoutOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                handleLogout();
+                setConfirmLogoutOpen(false);
+              }}
+            >
+              Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-}
+};
 
 export default Layout;

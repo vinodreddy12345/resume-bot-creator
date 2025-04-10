@@ -1,246 +1,174 @@
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
-import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+import { FileCheck, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Auth = () => {
-  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [activeTab, setActiveTab] = useState('login');
+  const [name, setName] = useState('');
+  const [tab, setTab] = useState('login');
+  const { login, register, isAuthenticated, setGuestUser } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password || !fullName) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
     }
-    
+  }, [isAuthenticated, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      setLoading(true);
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Account created",
-        description: "Check your email for the confirmation link",
-      });
-      
-      setActiveTab('login');
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred during sign up",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to login. Please try again.');
+      }
     }
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please enter both email and password",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     try {
-      setLoading(true);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Welcome back!",
-        description: "You are now signed in",
-      });
-      
-      navigate('/');
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Invalid login credentials",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      await register(email, password, name);
+      navigate('/dashboard');
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to register. Please try again.');
+      }
     }
+  };
+
+  const handleGuestLogin = () => {
+    const guestName = 'Guest User';
+    setGuestUser(guestName);
+    navigate('/dashboard');
+    toast.success(`Welcome, ${guestName}!`);
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary">ResumeAI</h1>
-          <p className="text-muted-foreground mt-2">Create professional resumes with AI</p>
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 w-8 p-0 mr-2" 
-                onClick={() => navigate('/landing')}
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <CardTitle className="flex-grow text-center">Welcome</CardTitle>
-              <div className="w-8"></div> {/* Spacer for alignment */}
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <div className="flex justify-between items-center mb-2">
+            <Link to="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" /> Back to Home
+            </Link>
+            <div className="flex items-center gap-2">
+              <FileCheck className="h-5 w-5 text-primary" />
+              <span className="font-semibold">ResumeBuilder</span>
             </div>
-            <CardDescription className="text-center">
-              Sign in to your account or create a new one
-            </CardDescription>
-          </CardHeader>
-          
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-2 w-full">
+          </div>
+          <CardTitle className="text-2xl">{tab === 'login' ? 'Welcome back' : 'Create an account'}</CardTitle>
+          <CardDescription>
+            {tab === 'login' 
+              ? 'Enter your credentials to access your account' 
+              : 'Sign up for a free account to create resumes'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
-            
             <TabsContent value="login">
-              <form onSubmit={handleSignIn}>
-                <CardContent className="space-y-4 pt-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="Email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10"
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-                
-                <CardFooter>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Signing in..." : "Sign In"}
-                  </Button>
-                </CardFooter>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="name@example.com" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full">Log in</Button>
               </form>
             </TabsContent>
-            
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp}>
-                <CardContent className="space-y-4 pt-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="fullname">Full Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="fullname"
-                        type="text"
-                        placeholder="Full name"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="pl-10"
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="Email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="Password (min 6 characters)"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10"
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-                
-                <CardFooter>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Creating account..." : "Create Account"}
-                  </Button>
-                </CardFooter>
+            <TabsContent value="register">
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input 
+                    id="name" 
+                    placeholder="John Doe" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-email">Email</Label>
+                  <Input 
+                    id="reg-email" 
+                    type="email" 
+                    placeholder="name@example.com" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reg-password">Password</Label>
+                  <Input 
+                    id="reg-password" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full">Create account</Button>
               </form>
             </TabsContent>
           </Tabs>
-        </Card>
-      </div>
+        </CardContent>
+        <CardFooter className="flex flex-col">
+          <div className="relative w-full mb-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t"></span>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={handleGuestLogin} 
+            className="w-full"
+          >
+            Continue as Guest
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
