@@ -13,7 +13,7 @@ interface ModernTemplateProps {
 
 export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, theme }) => {
   // Function to split text into paragraphs based on line breaks
-  const formatText = (text: string) => {
+  const formatText = (text: string | undefined) => {
     if (!text) return null;
     return text.split(/\r?\n/).map((paragraph, index) => (
       <p key={index} className="mb-1">{paragraph}</p>
@@ -22,6 +22,16 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
 
   const primaryColor = theme?.primaryColor || '#22c55e';
   const fontFamily = theme?.fontFamily || '"Inter", sans-serif';
+
+  // Safe access helpers
+  const personal = resumeData?.personal || {};
+  const experience = resumeData?.experience || [];
+  const education = resumeData?.education || [];
+  const skills = resumeData?.skills || [];
+  const projects = resumeData?.projects || [];
+  const certifications = resumeData?.certifications || [];
+  const languages = resumeData?.languages || [];
+  const customSections = resumeData?.customSections || [];
 
   return (
     <div className="resume-template modern" style={{
@@ -35,10 +45,10 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
     }}>
       {/* Header Section */}
       <header className="mb-6 flex items-start gap-4">
-        {resumeData.personal?.profilePicture && (
+        {personal?.profilePicture && (
           <div className="w-24 h-24 rounded-full overflow-hidden">
             <img 
-              src={resumeData.personal.profilePicture} 
+              src={personal.profilePicture} 
               alt="Profile" 
               className="w-full h-full object-cover"
             />
@@ -46,48 +56,48 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
         )}
         <div className="flex-1">
           <h1 className="text-3xl font-bold" style={{ color: primaryColor }}>
-            {resumeData.personal?.name || 'Your Name'}
+            {personal?.name || 'Your Name'}
           </h1>
           <p className="text-xl text-gray-600">
-            {resumeData.personal?.title || 'Professional Title'}
+            {personal?.title || 'Professional Title'}
           </p>
           
           <div className="flex flex-wrap gap-x-4 mt-2 text-sm text-gray-600">
-            {resumeData.personal?.email && (
-              <div key="email">{resumeData.personal.email}</div>
+            {personal?.email && (
+              <div key="email">{personal.email}</div>
             )}
-            {resumeData.personal?.phone && (
-              <div key="phone">{resumeData.personal.phone}</div>
+            {personal?.phone && (
+              <div key="phone">{personal.phone}</div>
             )}
-            {resumeData.personal?.location && (
-              <div key="location">{resumeData.personal.location}</div>
+            {personal?.location && (
+              <div key="location">{personal.location}</div>
             )}
-            {resumeData.personal?.website && (
-              <div key="website">{resumeData.personal.website}</div>
+            {personal?.website && (
+              <div key="website">{personal.website}</div>
             )}
           </div>
         </div>
       </header>
       
       {/* Summary Section */}
-      {resumeData.personal?.summary && (
+      {personal?.summary && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Professional Summary
           </h2>
           <div className="text-sm">
-            {formatText(resumeData.personal.summary)}
+            {formatText(personal.summary)}
           </div>
         </section>
       )}
       
       {/* Experience Section */}
-      {resumeData.experience && Array.isArray(resumeData.experience) && resumeData.experience.length > 0 && resumeData.experience[0]?.company && (
+      {experience && Array.isArray(experience) && experience.length > 0 && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Experience
           </h2>
-          {resumeData.experience.map((exp) => (
+          {experience.map((exp) => (
             <div key={exp.id} className="mb-4">
               <div className="flex justify-between font-medium">
                 <div className="text-md">
@@ -116,12 +126,12 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Education Section */}
-      {resumeData.education && Array.isArray(resumeData.education) && resumeData.education.length > 0 && resumeData.education[0]?.institution && (
+      {education && Array.isArray(education) && education.length > 0 && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Education
           </h2>
-          {resumeData.education.map((edu) => (
+          {education.map((edu) => (
             <div key={edu.id} className="mb-4">
               <div className="flex justify-between font-medium">
                 <div>
@@ -150,13 +160,13 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Skills Section */}
-      {resumeData.skills && Array.isArray(resumeData.skills) && resumeData.skills.length > 0 && resumeData.skills[0]?.name && (
+      {skills && Array.isArray(skills) && skills.length > 0 && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Skills
           </h2>
           <div className="flex flex-wrap gap-2">
-            {resumeData.skills.map((skill) => (
+            {skills.map((skill) => (
               <div 
                 key={skill.id} 
                 className="px-3 py-1 rounded-full text-sm" 
@@ -173,12 +183,12 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Projects Section */}
-      {resumeData.projects && Array.isArray(resumeData.projects) && resumeData.projects.length > 0 && (
+      {projects && Array.isArray(projects) && projects.length > 0 && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Projects
           </h2>
-          {resumeData.projects.map((project) => (
+          {projects.map((project) => (
             <div key={project.id} className="mb-4">
               <div className="font-medium" style={{ color: primaryColor }}>{project.name}</div>
               <div className="text-sm mt-1">
@@ -209,12 +219,12 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Certifications Section */}
-      {resumeData.certifications && Array.isArray(resumeData.certifications) && resumeData.certifications.length > 0 && (
+      {certifications && Array.isArray(certifications) && certifications.length > 0 && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Certifications
           </h2>
-          {resumeData.certifications.map((cert) => (
+          {certifications.map((cert) => (
             <div key={cert.id} className="mb-2">
               <div className="font-medium">{cert.name}</div>
               <div className="text-sm text-gray-600">
@@ -238,13 +248,13 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Languages Section */}
-      {resumeData.languages && Array.isArray(resumeData.languages) && resumeData.languages.length > 0 && (
+      {languages && Array.isArray(languages) && languages.length > 0 && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Languages
           </h2>
           <div className="grid grid-cols-2 gap-2">
-            {resumeData.languages.map((lang, index) => (
+            {languages.map((lang, index) => (
               <div key={lang.id || `lang-${index}`} className="flex justify-between">
                 <div>{lang.name}</div>
                 <div className="text-gray-600">{lang.proficiency}</div>
@@ -255,12 +265,12 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Custom Sections */}
-      {resumeData.customSections && Array.isArray(resumeData.customSections) && resumeData.customSections.length > 0 && (
+      {customSections && Array.isArray(customSections) && customSections.length > 0 && customSections[0]?.title && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
-            {resumeData.customSections[0].title}
+            {customSections[0].title}
           </h2>
-          {resumeData.customSections[0].items && Array.isArray(resumeData.customSections[0].items) && resumeData.customSections[0].items.map((item) => (
+          {customSections[0].items && Array.isArray(customSections[0].items) && customSections[0].items.map((item) => (
             <div key={item.id} className="mb-3">
               <div className="font-medium">{item.title}</div>
               <div className="text-sm">{formatText(item.description)}</div>

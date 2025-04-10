@@ -51,7 +51,9 @@ export const ResumePreview = () => {
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      pdf.save(`${resumeData?.personal?.name || 'resume'}_${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      const fileName = `${resumeData?.personal?.name || 'resume'}_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
       
       toast.dismiss();
       toast.success('PDF exported successfully!');
@@ -66,6 +68,9 @@ export const ResumePreview = () => {
     // This would require a server-side component or a specialized library
     toast.info('DOCX export feature coming soon!');
   };
+
+  // Check if we have valid resumeData to render
+  const hasValidData = resumeData && resumeData.personal;
 
   return (
     <div className="resume-preview flex flex-col gap-4">
@@ -84,34 +89,47 @@ export const ResumePreview = () => {
           </Select>
         </div>
         
-        <Button variant="outline" onClick={exportToPDF} className="flex items-center gap-2">
+        <Button variant="outline" onClick={exportToPDF} className="flex items-center gap-2" disabled={!hasValidData}>
           <Download className="h-4 w-4" />
           Export as PDF
         </Button>
         
-        <Button variant="outline" onClick={exportToDOCX} className="flex items-center gap-2">
+        <Button variant="outline" onClick={exportToDOCX} className="flex items-center gap-2" disabled={!hasValidData}>
           <FileType className="h-4 w-4" />
           Export as DOCX
         </Button>
       </div>
 
-      <div 
-        className="resume-container bg-white shadow-lg mx-auto overflow-hidden"
-        style={{ 
-          width: pageDimensions[pageSize].width,
-          minHeight: pageDimensions[pageSize].height,
-          padding: '15mm',
-          boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-          breakInside: 'avoid',
-          pageBreakAfter: 'always'
-        }}
-      >
-        <ResumeTemplateRenderer 
-          resumeData={resumeData} 
-          templateId={activeTemplate} 
-          theme={resumeTheme}
-        />
-      </div>
+      {!hasValidData ? (
+        <div className="resume-container bg-white shadow-lg mx-auto overflow-hidden flex items-center justify-center p-8 text-center"
+             style={{ 
+               width: pageDimensions[pageSize].width,
+               minHeight: pageDimensions[pageSize].height
+             }}>
+          <div className="p-6 border-2 border-dashed border-gray-300 rounded-lg">
+            <h3 className="text-xl font-medium text-gray-600 mb-2">No Resume Data Available</h3>
+            <p className="text-gray-500">Please fill out your resume details in the Form Builder or upload a resume.</p>
+          </div>
+        </div>
+      ) : (
+        <div 
+          className="resume-container bg-white shadow-lg mx-auto overflow-hidden"
+          style={{ 
+            width: pageDimensions[pageSize].width,
+            minHeight: pageDimensions[pageSize].height,
+            padding: '15mm',
+            boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+            breakInside: 'avoid',
+            pageBreakAfter: 'always'
+          }}
+        >
+          <ResumeTemplateRenderer 
+            resumeData={resumeData} 
+            templateId={activeTemplate} 
+            theme={resumeTheme}
+          />
+        </div>
+      )}
     </div>
   );
 };
