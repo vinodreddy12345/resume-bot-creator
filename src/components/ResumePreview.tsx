@@ -70,7 +70,7 @@ export const ResumePreview = () => {
   };
 
   // Check if we have valid resumeData to render
-  const hasValidData = resumeData && resumeData.personal;
+  const hasValidData = resumeData && resumeData.personal && resumeData.personal.name;
 
   return (
     <div className="resume-preview flex flex-col gap-4">

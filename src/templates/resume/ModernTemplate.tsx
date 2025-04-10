@@ -23,7 +23,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
   const primaryColor = theme?.primaryColor || '#22c55e';
   const fontFamily = theme?.fontFamily || '"Inter", sans-serif';
 
-  // Safe access helpers
+  // Safe access helpers with default empty objects to prevent runtime errors
   const personal = resumeData?.personal || {};
   const experience = resumeData?.experience || [];
   const education = resumeData?.education || [];
@@ -45,7 +45,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
     }}>
       {/* Header Section */}
       <header className="mb-6 flex items-start gap-4">
-        {personal?.profilePicture && (
+        {personal && 'profilePicture' in personal && personal.profilePicture && (
           <div className="w-24 h-24 rounded-full overflow-hidden">
             <img 
               src={personal.profilePicture} 
@@ -56,23 +56,23 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
         )}
         <div className="flex-1">
           <h1 className="text-3xl font-bold" style={{ color: primaryColor }}>
-            {personal?.name || 'Your Name'}
+            {'name' in personal ? personal.name : 'Your Name'}
           </h1>
           <p className="text-xl text-gray-600">
-            {personal?.title || 'Professional Title'}
+            {'title' in personal ? personal.title : 'Professional Title'}
           </p>
           
           <div className="flex flex-wrap gap-x-4 mt-2 text-sm text-gray-600">
-            {personal?.email && (
+            {'email' in personal && personal.email && (
               <div key="email">{personal.email}</div>
             )}
-            {personal?.phone && (
+            {'phone' in personal && personal.phone && (
               <div key="phone">{personal.phone}</div>
             )}
-            {personal?.location && (
+            {'location' in personal && personal.location && (
               <div key="location">{personal.location}</div>
             )}
-            {personal?.website && (
+            {'website' in personal && personal.website && (
               <div key="website">{personal.website}</div>
             )}
           </div>
@@ -80,7 +80,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       </header>
       
       {/* Summary Section */}
-      {personal?.summary && (
+      {'summary' in personal && personal.summary && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Professional Summary
@@ -254,8 +254,8 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
             Languages
           </h2>
           <div className="grid grid-cols-2 gap-2">
-            {languages.map((lang, index) => (
-              <div key={lang.id || `lang-${index}`} className="flex justify-between">
+            {languages.map((lang) => (
+              <div key={lang.id} className="flex justify-between">
                 <div>{lang.name}</div>
                 <div className="text-gray-600">{lang.proficiency}</div>
               </div>
@@ -265,7 +265,8 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Custom Sections */}
-      {customSections && Array.isArray(customSections) && customSections.length > 0 && customSections[0]?.title && (
+      {customSections && Array.isArray(customSections) && customSections.length > 0 && 
+       customSections[0] && 'title' in customSections[0] && customSections[0].title && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             {customSections[0].title}
