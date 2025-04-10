@@ -86,8 +86,13 @@ const Landing = () => {
               )}
             </div>
             <div className="relative hidden md:block">
+              {/* Updated resume preview mockup with actual design elements */}
               <div className="bg-white shadow-xl rounded-lg p-6 transform rotate-2 border border-primary/20">
-                <div className="bg-muted/30 h-16 w-full rounded-md mb-4"></div>
+                {/* Header area */}
+                <div className="bg-primary/10 h-16 w-full rounded-md mb-4 flex items-center px-4">
+                  <div className="w-40 h-6 bg-primary/20 rounded"></div>
+                </div>
+                {/* Content blocks */}
                 <div className="space-y-2">
                   <div className="bg-muted/30 h-8 w-3/4 rounded-md"></div>
                   <div className="bg-muted/30 h-8 w-full rounded-md"></div>
@@ -95,7 +100,9 @@ const Landing = () => {
                 </div>
               </div>
               <div className="absolute top-10 right-10 bg-white shadow-xl rounded-lg p-6 transform -rotate-3 border border-primary/20">
-                <div className="bg-muted/30 h-12 w-full rounded-md mb-4"></div>
+                <div className="bg-primary/20 h-12 w-full rounded-md mb-4 flex items-center justify-center">
+                  <div className="w-24 h-4 bg-primary/30 rounded"></div>
+                </div>
                 <div className="space-y-2">
                   <div className="bg-muted/30 h-6 w-5/6 rounded-md"></div>
                   <div className="bg-muted/30 h-6 w-full rounded-md"></div>
@@ -165,7 +172,7 @@ const Landing = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="bg-primary/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <div className="bg-primary/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 relative">
                 <FilePlus className="h-8 w-8 text-primary" />
                 <div className="absolute -right-1 -top-1 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center font-bold">
                   1
@@ -178,7 +185,7 @@ const Landing = () => {
             </div>
             
             <div className="text-center">
-              <div className="bg-primary/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <div className="bg-primary/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 relative">
                 <PanelLeft className="h-8 w-8 text-primary" />
                 <div className="absolute -right-1 -top-1 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center font-bold">
                   2
@@ -191,7 +198,7 @@ const Landing = () => {
             </div>
             
             <div className="text-center">
-              <div className="bg-primary/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <div className="bg-primary/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 relative">
                 <Wand2 className="h-8 w-8 text-primary" />
                 <div className="absolute -right-1 -top-1 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center font-bold">
                   3
@@ -204,7 +211,7 @@ const Landing = () => {
             </div>
             
             <div className="text-center">
-              <div className="bg-primary/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <div className="bg-primary/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 relative">
                 <Download className="h-8 w-8 text-primary" />
                 <div className="absolute -right-1 -top-1 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center font-bold">
                   4

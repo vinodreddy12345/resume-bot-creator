@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { Briefcase, CheckCircle, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useResumeStore } from '@/store/resumeStore';
@@ -15,7 +15,6 @@ const JobTailor = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const { resumeData, setResumeData } = useResumeStore();
-  const { toast } = useToast();
   
   const handleTailorResume = async () => {
     if (!jobDescription.trim()) {
@@ -36,33 +35,34 @@ const JobTailor = () => {
       if (response.success && response.data) {
         setResumeData(response.data.tailoredResume);
         setSuggestions(response.data.suggestions || []);
-        toast({
-          title: "Resume Tailored",
-          description: "Your resume has been optimized for this job!",
+        toast.success("Resume Tailored", {
+          description: "Your resume has been optimized for this job!"
         });
       } else {
-        toast({
-          title: "Tailoring Failed",
-          description: response.error || "Failed to tailor your resume. Please try again.",
-          variant: "destructive",
+        toast.error("Tailoring Failed", {
+          description: response.error || "Failed to tailor your resume. Please try again."
         });
       }
     } catch (error) {
       console.error('Error tailoring resume:', error);
-      toast({
-        title: "Error",
-        description: "An error occurred while tailoring your resume.",
-        variant: "destructive",
+      toast.error("Error", {
+        description: "An error occurred while tailoring your resume."
       });
     } finally {
       setIsLoading(false);
     }
   };
   
-  const isResumeEmpty = 
+  // Check if resume has essential data without accessing potentially undefined properties
+  const isResumeEmpty = !resumeData || 
+    !resumeData.personal || 
     !resumeData.personal.name || 
     !resumeData.personal.summary || 
+    !resumeData.experience || 
+    resumeData.experience.length === 0 || 
     !resumeData.experience[0]?.company || 
+    !resumeData.skills || 
+    resumeData.skills.length === 0 || 
     !resumeData.skills[0]?.name;
 
   return (
