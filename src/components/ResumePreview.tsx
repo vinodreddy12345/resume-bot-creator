@@ -51,7 +51,7 @@ export const ResumePreview = () => {
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      pdf.save(`${resumeData?.personalInfo?.name || 'resume'}_${new Date().toISOString().split('T')[0]}.pdf`);
+      pdf.save(`${resumeData?.personal?.name || 'resume'}_${new Date().toISOString().split('T')[0]}.pdf`);
       
       toast.dismiss();
       toast.success('PDF exported successfully!');
