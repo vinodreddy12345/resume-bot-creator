@@ -20,6 +20,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/landing" element={<Landing />} /> {/* Add explicit landing route */}
           <Route path="/auth" element={<Auth />} />
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Index />} />
