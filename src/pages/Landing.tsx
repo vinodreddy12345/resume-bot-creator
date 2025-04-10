@@ -41,7 +41,17 @@ const Landing = () => {
       // Store guest name in localStorage
       localStorage.setItem('guestName', guestName);
       localStorage.setItem('isGuest', 'true');
-      navigate('/');
+      
+      // Force a re-render by updating state
+      setIsGuest(true);
+      
+      // Dispatch a storage event to notify other components
+      window.dispatchEvent(new Event('storage'));
+      
+      // Small delay to ensure state updates before navigation
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
     } else {
       setShowNameInput(true);
     }
