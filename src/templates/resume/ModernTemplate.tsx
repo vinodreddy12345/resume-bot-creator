@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ResumeData } from '@/types/resume';
 
@@ -34,7 +35,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
     }}>
       {/* Header Section */}
       <header className="mb-6 flex items-start gap-4">
-        {resumeData.personal.profilePicture && (
+        {resumeData.personal?.profilePicture && (
           <div className="w-24 h-24 rounded-full overflow-hidden">
             <img 
               src={resumeData.personal.profilePicture} 
@@ -45,23 +46,23 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
         )}
         <div className="flex-1">
           <h1 className="text-3xl font-bold" style={{ color: primaryColor }}>
-            {resumeData.personal.name || 'Your Name'}
+            {resumeData.personal?.name || 'Your Name'}
           </h1>
           <p className="text-xl text-gray-600">
-            {resumeData.personal.title || 'Professional Title'}
+            {resumeData.personal?.title || 'Professional Title'}
           </p>
           
           <div className="flex flex-wrap gap-x-4 mt-2 text-sm text-gray-600">
-            {resumeData.personal.email && (
+            {resumeData.personal?.email && (
               <div key="email">{resumeData.personal.email}</div>
             )}
-            {resumeData.personal.phone && (
+            {resumeData.personal?.phone && (
               <div key="phone">{resumeData.personal.phone}</div>
             )}
-            {resumeData.personal.location && (
+            {resumeData.personal?.location && (
               <div key="location">{resumeData.personal.location}</div>
             )}
-            {resumeData.personal.website && (
+            {resumeData.personal?.website && (
               <div key="website">{resumeData.personal.website}</div>
             )}
           </div>
@@ -69,7 +70,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       </header>
       
       {/* Summary Section */}
-      {resumeData.personal.summary && (
+      {resumeData.personal?.summary && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Professional Summary
@@ -81,7 +82,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Experience Section */}
-      {resumeData.experience.length > 0 && resumeData.experience[0].company && (
+      {resumeData.experience && Array.isArray(resumeData.experience) && resumeData.experience.length > 0 && resumeData.experience[0]?.company && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Experience
@@ -102,7 +103,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
               <div className="mt-1 text-sm">
                 {formatText(exp.description)}
               </div>
-              {exp.highlights && exp.highlights.length > 0 && (
+              {exp.highlights && Array.isArray(exp.highlights) && exp.highlights.length > 0 && (
                 <ul className="list-disc list-inside text-sm mt-1 ml-1">
                   {exp.highlights.map((highlight, index) => (
                     <li key={index}>{highlight}</li>
@@ -115,7 +116,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Education Section */}
-      {resumeData.education.length > 0 && resumeData.education[0].institution && (
+      {resumeData.education && Array.isArray(resumeData.education) && resumeData.education.length > 0 && resumeData.education[0]?.institution && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Education
@@ -136,7 +137,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
                 {edu.location && <span>, {edu.location}</span>}
                 {edu.gpa && <span> | GPA: {edu.gpa}</span>}
               </div>
-              {edu.highlights && edu.highlights.length > 0 && (
+              {edu.highlights && Array.isArray(edu.highlights) && edu.highlights.length > 0 && (
                 <ul className="list-disc list-inside text-sm mt-1 ml-1">
                   {edu.highlights.map((highlight, index) => (
                     <li key={index}>{highlight}</li>
@@ -149,7 +150,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Skills Section */}
-      {resumeData.skills.length > 0 && resumeData.skills[0].name && (
+      {resumeData.skills && Array.isArray(resumeData.skills) && resumeData.skills.length > 0 && resumeData.skills[0]?.name && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Skills
@@ -172,7 +173,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Projects Section */}
-      {resumeData.projects && resumeData.projects.length > 0 && (
+      {resumeData.projects && Array.isArray(resumeData.projects) && resumeData.projects.length > 0 && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Projects
@@ -195,7 +196,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
                   </a>
                 </div>
               )}
-              {project.highlights && project.highlights.length > 0 && (
+              {project.highlights && Array.isArray(project.highlights) && project.highlights.length > 0 && (
                 <ul className="list-disc list-inside text-sm mt-1 ml-1">
                   {project.highlights.map((highlight, index) => (
                     <li key={index}>{highlight}</li>
@@ -208,7 +209,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Certifications Section */}
-      {resumeData.certifications && resumeData.certifications.length > 0 && (
+      {resumeData.certifications && Array.isArray(resumeData.certifications) && resumeData.certifications.length > 0 && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Certifications
@@ -237,7 +238,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Languages Section */}
-      {resumeData.languages && resumeData.languages.length > 0 && (
+      {resumeData.languages && Array.isArray(resumeData.languages) && resumeData.languages.length > 0 && (
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
             Languages
@@ -254,19 +255,19 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ resumeData, them
       )}
       
       {/* Custom Sections */}
-      {resumeData.customSections && resumeData.customSections.map((section) => (
-        <section key={section.id} className="mb-6">
+      {resumeData.customSections && Array.isArray(resumeData.customSections) && resumeData.customSections.length > 0 && (
+        <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2 pb-1 border-b" style={{ borderColor: primaryColor }}>
-            {section.title}
+            {resumeData.customSections[0].title}
           </h2>
-          {section.items.map((item) => (
+          {resumeData.customSections[0].items && Array.isArray(resumeData.customSections[0].items) && resumeData.customSections[0].items.map((item) => (
             <div key={item.id} className="mb-3">
               <div className="font-medium">{item.title}</div>
               <div className="text-sm">{formatText(item.description)}</div>
             </div>
           ))}
         </section>
-      ))}
+      )}
     </div>
   );
 };

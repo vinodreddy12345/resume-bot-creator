@@ -18,10 +18,8 @@ const JobTailor = () => {
   
   const handleTailorResume = async () => {
     if (!jobDescription.trim()) {
-      toast({
-        title: "Job Description Required",
-        description: "Please paste a job description to tailor your resume.",
-        variant: "destructive",
+      toast.error("Job Description Required", {
+        description: "Please paste a job description to tailor your resume."
       });
       return;
     }
@@ -53,17 +51,21 @@ const JobTailor = () => {
     }
   };
   
-  // Check if resume has essential data without accessing potentially undefined properties
+  // Check if resume has essential data with null/undefined checks
   const isResumeEmpty = !resumeData || 
     !resumeData.personal || 
     !resumeData.personal.name || 
     !resumeData.personal.summary || 
     !resumeData.experience || 
+    !Array.isArray(resumeData.experience) ||
     resumeData.experience.length === 0 || 
-    !resumeData.experience[0]?.company || 
+    !resumeData.experience[0] ||
+    !resumeData.experience[0].company || 
     !resumeData.skills || 
+    !Array.isArray(resumeData.skills) ||
     resumeData.skills.length === 0 || 
-    !resumeData.skills[0]?.name;
+    !resumeData.skills[0] ||
+    !resumeData.skills[0].name;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
