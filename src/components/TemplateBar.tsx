@@ -57,7 +57,6 @@ export const TemplateBar = () => {
             }}
             onClick={() => setResumeTheme({
               primaryColor: theme.color,
-              secondaryColor: theme.color + '33', // 20% opacity version for secondary
               fontFamily: resumeTheme?.fontFamily || 'Roboto, sans-serif'
             })}
             title={theme.name}
