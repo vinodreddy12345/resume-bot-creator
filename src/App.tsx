@@ -23,17 +23,33 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const [isGuest, setIsGuest] = useState<boolean>(false);
+  const [checkingStatus, setCheckingStatus] = useState<boolean>(true);
   
   useEffect(() => {
     // Check if user is a guest
-    const guestStatus = localStorage.getItem('isGuest') === 'true';
-    setIsGuest(guestStatus);
+    const checkGuestStatus = () => {
+      const guestStatus = localStorage.getItem('isGuest') === 'true';
+      setIsGuest(guestStatus);
+      setCheckingStatus(false);
+    };
+    
+    // Check immediately on mount
+    checkGuestStatus();
+    
+    // Also listen for storage events (in case localStorage changes in another tab)
+    window.addEventListener('storage', checkGuestStatus);
+    
+    return () => {
+      window.removeEventListener('storage', checkGuestStatus);
+    };
   }, []);
   
-  if (loading) {
+  // Show loading state while checking auth status
+  if (loading || checkingStatus) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   
+  // Redirect if not authenticated and not a guest
   if (!user && !isGuest) {
     return <Navigate to="/landing" replace />;
   }

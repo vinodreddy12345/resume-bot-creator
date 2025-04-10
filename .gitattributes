@@ -1,0 +1,2 @@
+# Mark .env file as binary to prevent Git from scanning its contents
+.env binary

@@ -32,7 +32,6 @@ export function Layout() {
   
   const navItems = [
     { name: 'Form Builder', path: '/', icon: FileText },
-    { name: 'AI Chat', path: '/chat', icon: MessageSquare },
     { name: 'Upload Resume', path: '/upload', icon: Upload },
     { name: 'Job Tailor', path: '/job-tailor', icon: Briefcase },
     { name: 'Job Search', path: '/job-search', icon: Search }

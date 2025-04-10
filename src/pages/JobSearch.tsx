@@ -1,21 +1,20 @@
 
-import { useState, useEffect } from 'react';
-import { Loader2, Search, Briefcase, Filter } from 'lucide-react';
+import { useState } from 'react';
+import { Briefcase, MessageSquare, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { useToast } from '@/components/ui/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+interface FeedbackData {
+  email: string;
+  feedbackType: 'suggestion' | 'issue' | 'feature';
+  message: string;
+  rating: number;
+}
 
 interface Job {
   id: string;
@@ -30,126 +29,227 @@ interface Job {
 }
 
 const JobSearch = () => {
+  const [activeTab, setActiveTab] = useState<string>('coming-soon');
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [experienceFilter, setExperienceFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [feedbackData, setFeedbackData] = useState<FeedbackData>({
+    email: '',
+    feedbackType: 'suggestion',
+    message: '',
+    rating: 5
+  });
   const { toast } = useToast();
 
-  // Mock data - in a real app, this would come from API calls
-  const mockJobs: Job[] = [
-    {
-      id: '1',
-      title: 'Frontend Developer',
-      company: 'TechCorp',
-      location: 'New York, NY (Remote)',
-      description: 'We are looking for a skilled Frontend Developer proficient in React, TypeScript, and modern CSS frameworks.',
-      experienceLevel: 'Mid-Level',
-      url: 'https://example.com/job1',
-      source: 'LinkedIn',
-      postedDate: '2 days ago',
-    },
-    {
-      id: '2',
-      title: 'Full Stack Engineer',
-      company: 'InnovateTech',
-      location: 'San Francisco, CA',
-      description: 'Join our team as a Full Stack Engineer working with React, Node.js, and AWS.',
-      experienceLevel: 'Senior',
-      url: 'https://example.com/job2',
-      source: 'Glassdoor',
-      postedDate: '1 week ago',
-    },
-    {
-      id: '3',
-      title: 'Junior Web Developer',
-      company: 'StartupX',
-      location: 'Remote',
-      description: 'Great opportunity for a beginner developer to gain experience with HTML, CSS, and JavaScript.',
-      experienceLevel: 'Entry-Level',
-      url: 'https://example.com/job3',
-      source: 'Naukri',
-      postedDate: '3 days ago',
-    },
-    {
-      id: '4',
-      title: 'UX/UI Designer',
-      company: 'DesignHub',
-      location: 'London, UK (Hybrid)',
-      description: 'We need a creative designer with experience in Figma and user research methodologies.',
-      experienceLevel: 'Mid-Level',
-      url: 'https://example.com/job4',
-      source: 'LinkedIn',
-      postedDate: '5 days ago',
-    },
-    {
-      id: '5',
-      title: 'Data Scientist',
-      company: 'DataCorp',
-      location: 'Boston, MA',
-      description: 'Looking for a data scientist with expertise in machine learning and Python.',
-      experienceLevel: 'Senior',
-      url: 'https://example.com/job5',
-      source: 'Indeed',
-      postedDate: '1 day ago',
-    },
-    {
-      id: '6',
-      title: 'Software Engineering Intern',
-      company: 'TechStartup',
-      location: 'Remote',
-      description: 'Great opportunity for students to gain real-world software development experience.',
-      experienceLevel: 'Entry-Level',
-      url: 'https://example.com/job6',
-      source: 'Glassdoor',
-      postedDate: '2 weeks ago',
-    },
-  ];
+  // API endpoints for job search
+  const jobApiEndpoints = {
+    jsearch: 'https://jsearch.p.rapidapi.com/search',
+    findwork: 'https://findwork.dev/api/jobs/',
+    github: 'https://jobs.github.com/positions.json',
+    remotive: 'https://remotive.io/api/remote-jobs',
+    indeed: 'https://indeed-jobs-api.p.rapidapi.com/search',
+  };
 
-  useEffect(() => {
-    // Simulate API call to fetch jobs
-    const fetchJobs = () => {
-      setLoading(true);
+  // Function to fetch jobs from multiple APIs
+  const fetchJobs = async () => {
+    setLoading(true);
+    
+    try {
+      // Create an array to store all jobs from different sources
+      let allJobs: Job[] = [];
       
-      // Simulate network delay
-      setTimeout(() => {
-        const filteredJobs = mockJobs.filter(job => {
-          const matchesSearch = 
-            job.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            job.description.toLowerCase().includes(searchTerm.toLowerCase());
-          
-          const matchesExperience = 
-            experienceFilter === 'all' || 
-            job.experienceLevel.toLowerCase().includes(
-              experienceFilter === 'fresher' ? 'entry' : experienceFilter.toLowerCase()
-            );
-          
-          return matchesSearch && matchesExperience;
+      // JSearch API (RapidAPI) - Requires API key
+      try {
+        const response = await fetch(`${jobApiEndpoints.jsearch}?query=${encodeURIComponent(searchTerm || 'developer')}&page=1&num_pages=1`, {
+          method: 'GET',
+          headers: {
+            'X-RapidAPI-Key': process.env.REACT_APP_RAPID_API_KEY || 'DEMO_KEY',
+            'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
+          }
         });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const jsearchJobs = data.data.map((item: any) => ({
+            id: `jsearch-${item.job_id}`,
+            title: item.job_title,
+            company: item.employer_name,
+            location: item.job_city ? `${item.job_city}, ${item.job_country}` : item.job_country,
+            description: item.job_description,
+            experienceLevel: item.job_required_experience?.required_experience_in_months > 36 ? 'Senior' : 
+                          item.job_required_experience?.required_experience_in_months > 12 ? 'Mid-Level' : 'Entry-Level',
+            url: item.job_apply_link,
+            source: 'JSearch',
+            postedDate: item.job_posted_at_datetime_utc ? new Date(item.job_posted_at_datetime_utc).toLocaleDateString() : 'Unknown'
+          }));
+          allJobs = [...allJobs, ...jsearchJobs];
+        }
+      } catch (error) {
+        console.error('Error fetching from JSearch API:', error);
+      }
+      
+      // Remotive API (Free, no API key required)
+      try {
+        const response = await fetch(`${jobApiEndpoints.remotive}?search=${encodeURIComponent(searchTerm || '')}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          const remotiveJobs = data.jobs.map((item: any) => ({
+            id: `remotive-${item.id}`,
+            title: item.title,
+            company: item.company_name,
+            location: item.candidate_required_location || 'Remote',
+            description: item.description,
+            experienceLevel: item.title.toLowerCase().includes('senior') ? 'Senior' : 
+                          item.title.toLowerCase().includes('junior') ? 'Entry-Level' : 'Mid-Level',
+            url: item.url,
+            source: 'Remotive',
+            postedDate: item.publication_date ? new Date(item.publication_date).toLocaleDateString() : 'Unknown'
+          }));
+          allJobs = [...allJobs, ...remotiveJobs];
+        }
+      } catch (error) {
+        console.error('Error fetching from Remotive API:', error);
+      }
+      
+      // Indeed API (RapidAPI) - Requires API key
+      try {
+        const response = await fetch(`${jobApiEndpoints.indeed}?query=${encodeURIComponent(searchTerm || 'developer')}&location=remote`, {
+          method: 'GET',
+          headers: {
+            'X-RapidAPI-Key': process.env.REACT_APP_RAPID_API_KEY || 'DEMO_KEY',
+            'X-RapidAPI-Host': 'indeed-jobs-api.p.rapidapi.com'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const indeedJobs = data.results.map((item: any) => ({
+            id: `indeed-${item.id}`,
+            title: item.title,
+            company: item.company,
+            location: item.location || 'Unknown',
+            description: item.summary || 'No description available',
+            experienceLevel: item.title.toLowerCase().includes('senior') ? 'Senior' : 
+                          item.title.toLowerCase().includes('junior') ? 'Entry-Level' : 'Mid-Level',
+            url: item.url,
+            source: 'Indeed',
+            postedDate: item.posted_time || 'Unknown'
+          }));
+          allJobs = [...allJobs, ...indeedJobs];
+        }
+      } catch (error) {
+        console.error('Error fetching from Indeed API:', error);
+      }
+      
+      // Filter jobs based on experience level if selected
+      if (experienceFilter !== 'all') {
+        allJobs = allJobs.filter(job => 
+          job.experienceLevel.toLowerCase().includes(experienceFilter.toLowerCase())
+        );
+      }
+      
+      // If no jobs found or APIs failed, use fallback data
+      if (allJobs.length === 0) {
+        // Fallback data in case APIs fail or return no results
+        allJobs = [
+          {
+            id: 'fallback-1',
+            title: 'Frontend Developer',
+            company: 'TechCorp',
+            location: 'New York, NY (Remote)',
+            description: 'We are looking for a skilled Frontend Developer proficient in React, TypeScript, and modern CSS frameworks.',
+            experienceLevel: 'Mid-Level',
+            url: 'https://example.com/job1',
+            source: 'Fallback Data',
+            postedDate: 'Recent'
+          },
+          {
+            id: 'fallback-2',
+            title: 'Full Stack Engineer',
+            company: 'InnovateTech',
+            location: 'San Francisco, CA',
+            description: 'Join our team as a Full Stack Engineer working with React, Node.js, and AWS.',
+            experienceLevel: 'Senior',
+            url: 'https://example.com/job2',
+            source: 'Fallback Data',
+            postedDate: 'Recent'
+          },
+          {
+            id: 'fallback-3',
+            title: 'Junior Web Developer',
+            company: 'StartupX',
+            location: 'Remote',
+            description: 'Great opportunity for a beginner developer to gain experience with HTML, CSS, and JavaScript.',
+            experienceLevel: 'Entry-Level',
+            url: 'https://example.com/job3',
+            source: 'Fallback Data',
+            postedDate: 'Recent'
+          }
+        ];
+        
+        toast({
+          title: 'Using demo data',
+          description: 'Could not connect to job APIs. Showing sample job listings instead.',
+          variant: 'default',
+        });
+      }
+      
+      setJobs(allJobs);
+      setTotalPages(Math.max(1, Math.ceil(allJobs.length / 4)));
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch job listings. Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleFeedbackSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, this would send the feedback to a server
+    console.log('Feedback submitted:', feedbackData);
+    
+    toast({
+      title: 'Feedback Submitted',
+      description: 'Thank you for your feedback! We will use it to improve our job search feature.',
+    });
+    
+    // Reset form
+    setFeedbackData({
+      email: '',
+      feedbackType: 'suggestion',
+      message: '',
+      rating: 5
+    });
+  };
 
-        setJobs(filteredJobs);
-        setTotalPages(Math.max(1, Math.ceil(filteredJobs.length / 4)));
-        setCurrentPage(1);
-        setLoading(false);
-      }, 500);
-    };
-
-    fetchJobs();
-  }, [searchTerm, experienceFilter]);
+  const updateFeedbackData = (field: keyof FeedbackData, value: any) => {
+    setFeedbackData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Search is already triggered by the useEffect dependency on searchTerm
+    fetchJobs();
   };
 
   const handleApply = (job: Job) => {
-    window.open(job.url, '_blank');
+    // Open the job application URL in a new tab
+    window.open(job.url, '_blank', 'noopener,noreferrer');
+    
     toast({
-      title: "Redirecting to job application",
-      description: `You're being redirected to apply for ${job.title} at ${job.company}`,
+      title: 'Applying for job',
+      description: `Opening application for ${job.title} at ${job.company}`,
     });
   };
 
@@ -167,133 +267,150 @@ const JobSearch = () => {
           Search across multiple job platforms including LinkedIn, Glassdoor, Naukri, and more.
         </p>
       </div>
-
-      <Card>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSearch} className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search jobs by title, company, or keyword" 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+      
+      <Tabs defaultValue="coming-soon" onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="coming-soon">Coming Soon</TabsTrigger>
+          <TabsTrigger value="feedback">Provide Feedback</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="coming-soon" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">Job Search Feature Coming Soon!</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex justify-center">
+                <Briefcase className="h-24 w-24 text-primary opacity-80" />
               </div>
               
-              <div className="w-full md:w-64">
-                <Label htmlFor="experience-filter" className="sr-only">Experience Level</Label>
-                <Select 
-                  value={experienceFilter} 
-                  onValueChange={setExperienceFilter}
-                >
-                  <SelectTrigger id="experience-filter" className="w-full">
-                    <SelectValue placeholder="Experience Level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Experience Levels</SelectItem>
-                    <SelectItem value="fresher">Fresher / Entry-Level</SelectItem>
-                    <SelectItem value="mid">Mid-Level</SelectItem>
-                    <SelectItem value="senior">Senior</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="text-center space-y-4">
+                <h3 className="text-xl font-semibold">We're Working On Something Exciting</h3>
+                <p className="text-muted-foreground">
+                  Our team is currently developing a powerful job search feature that will help you find
+                  opportunities across multiple platforms including LinkedIn, Indeed, Glassdoor, and more.
+                </p>
+                
+                <div className="bg-muted p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">What to expect:</h4>
+                  <ul className="text-left list-disc pl-5 space-y-1">
+                    <li>Search across multiple job boards in one place</li>
+                    <li>Filter by experience level, location, and more</li>
+                    <li>Save your favorite job listings</li>
+                    <li>Apply directly from our platform</li>
+                    <li>Get personalized job recommendations based on your resume</li>
+                  </ul>
+                </div>
               </div>
-              
-              <Button type="submit" className="md:w-auto">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter Results
+            </CardContent>
+            <CardFooter className="flex justify-center">
+              <Button onClick={() => setActiveTab('feedback')}>
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Share Your Suggestions
               </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : jobs.length === 0 ? (
-        <div className="text-center py-12">
-          <Briefcase className="h-12 w-12 mx-auto text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">No jobs found</h3>
-          <p className="mt-2 text-muted-foreground">
-            Try adjusting your search terms or filters
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {paginatedJobs.map((job) => (
-              <Card key={job.id} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-xl">{job.title}</CardTitle>
-                      <div className="text-lg font-medium mt-1">{job.company}</div>
-                      <div className="text-sm text-muted-foreground mt-1">{job.location}</div>
-                    </div>
-                    <Badge variant="outline" className="ml-2">
-                      {job.source}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  <div className="flex justify-between mb-4">
-                    <Badge variant={
-                      job.experienceLevel.includes('Entry') ? 'secondary' :
-                      job.experienceLevel.includes('Mid') ? 'default' : 'outline'
-                    }>
-                      {job.experienceLevel}
-                    </Badge>
-                    <span className="text-xs">{job.postedDate}</span>
-                  </div>
-                  <p className="line-clamp-3">{job.description}</p>
-                </CardContent>
-                <CardFooter className="bg-muted/50 flex justify-between pt-4">
-                  <Button variant="outline" size="sm">
-                    Save
-                  </Button>
-                  <Button size="sm" onClick={() => handleApply(job)}>
-                    Apply Now
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <Pagination className="mt-8">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="feedback" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Help Us Build the Perfect Job Search</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Your Email (optional)</label>
+                  <Input 
+                    type="email" 
+                    placeholder="email@example.com" 
+                    value={feedbackData.email}
+                    onChange={(e) => updateFeedbackData('email', e.target.value)}
                   />
-                </PaginationItem>
+                </div>
                 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <PaginationItem key={page}>
-                    <PaginationLink 
-                      isActive={currentPage === page}
-                      onClick={() => setCurrentPage(page)}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Feedback Type</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button 
+                      type="button"
+                      variant={feedbackData.feedbackType === 'suggestion' ? 'default' : 'outline'}
+                      className="w-full"
+                      onClick={() => updateFeedbackData('feedbackType', 'suggestion')}
                     >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+                      Suggestion
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant={feedbackData.feedbackType === 'feature' ? 'default' : 'outline'}
+                      className="w-full"
+                      onClick={() => updateFeedbackData('feedbackType', 'feature')}
+                    >
+                      Feature Request
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant={feedbackData.feedbackType === 'issue' ? 'default' : 'outline'}
+                      className="w-full"
+                      onClick={() => updateFeedbackData('feedbackType', 'issue')}
+                    >
+                      Issue
+                    </Button>
+                  </div>
+                </div>
                 
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Your Feedback</label>
+                  <Textarea 
+                    placeholder="Tell us what you'd like to see in our job search feature..."
+                    rows={4}
+                    value={feedbackData.message}
+                    onChange={(e) => updateFeedbackData('message', e.target.value)}
+                    required
                   />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
-        </>
-      )}
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">How excited are you about this feature?</label>
+                  <div className="flex items-center space-x-4">
+                    <Button 
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => updateFeedbackData('rating', Math.max(1, feedbackData.rating - 1))}
+                    >
+                      <ThumbsDown className={`h-5 w-5 ${feedbackData.rating < 3 ? 'text-destructive' : 'text-muted-foreground'}`} />
+                    </Button>
+                    
+                    <div className="flex-1">
+                      <div className="w-full bg-muted rounded-full h-2.5">
+                        <div 
+                          className="bg-primary h-2.5 rounded-full" 
+                          style={{ width: `${(feedbackData.rating / 5) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => updateFeedbackData('rating', Math.min(5, feedbackData.rating + 1))}
+                    >
+                      <ThumbsUp className={`h-5 w-5 ${feedbackData.rating > 3 ? 'text-primary' : 'text-muted-foreground'}`} />
+                    </Button>
+                  </div>
+                </div>
+              
+                <Button type="submit" className="w-full mt-6">
+                  Submit Feedback
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+      </Tabs>
     </div>
   );
 };

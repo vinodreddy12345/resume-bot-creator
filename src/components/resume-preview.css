@@ -1,0 +1,72 @@
+/* Resume Preview Styling for Print and Page Breaks */
+
+.resume-preview {
+  background-color: white;
+  color: #333;
+  font-family: 'Arial', sans-serif;
+  box-sizing: border-box;
+  width: 8.5in;
+  min-height: 11in;
+  height: auto !important;
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Section titles with horizontal line */
+.resume-section-title {
+  color: #2563eb; /* Primary blue color */
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid #2563eb;
+  page-break-after: avoid; /* Prevent breaking right after a section title */
+}
+
+.resume-section {
+  margin-bottom: 1.5rem;
+  page-break-inside: avoid; /* Try to avoid breaking within a section */
+}
+
+/* For print/PDF generation */
+@media print {
+  .resume-preview {
+    padding: 0.5in;
+    width: 8.5in;
+    height: 11in;
+  }
+  
+  /* Add page break suggestions */
+  .resume-section {
+    page-break-inside: avoid;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  
+  /* Prevent orphaned items */
+  p, li {
+    page-break-inside: avoid;
+  }
+  
+  /* Ensure proper margin for printing */
+  @page {
+    margin: 0.5in;
+  }
+}
+
+/* Format description text to handle line breaks better */
+.description-text {
+  white-space: pre-line;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* For multi-page resumes */
+.multi-page {
+  min-height: 11in;
+  height: auto !important;
+  overflow: visible !important;
+  padding-bottom: 1in; /* Add extra space at bottom */
+}

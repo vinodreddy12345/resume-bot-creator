@@ -1,11 +1,16 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
-import { ResumeData, ResumeTemplate, ResumeTheme } from '@/types/resume';
+import { ResumeData, ResumeTheme } from '@/types/resume';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { v4 as uuidv4 } from 'uuid';
 import { Json } from '@/integrations/supabase/types';
+
+interface ResumeTemplate {
+  id: string;
+  name: string;
+  thumbnail: string;
+}
 
 interface ResumeStore {
   resumeData: ResumeData;
@@ -38,6 +43,12 @@ interface ResumeStore {
   addLanguage: () => void;
   updateLanguage: (id: string, language: Partial<Omit<ResumeData['languages'][0], 'id'>>) => void;
   removeLanguage: (id: string) => void;
+  addCustomSection: () => void;
+  updateCustomSection: (id: string, section: Partial<Omit<ResumeData['customSections'][0], 'id'>>) => void;
+  removeCustomSection: (id: string) => void;
+  addCustomSectionItem: (sectionId: string) => void;
+  updateCustomSectionItem: (sectionId: string, itemId: string, item: Partial<Omit<ResumeData['customSections'][0]['items'][0], 'id'>>) => void;
+  removeCustomSectionItem: (sectionId: string, itemId: string) => void;
   setResumeData: (data: ResumeData) => void;
   setActiveTemplate: (templateId: string) => void;
   setResumeTheme: (theme: Partial<ResumeStore['resumeTheme']>) => void;
@@ -366,6 +377,123 @@ export const useResumeStore = create<ResumeStore>()(
             languages: state.resumeData.languages?.filter((l) => l.id !== id) || [],
           },
         })),
+        
+      addCustomSection: () =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            customSections: [
+              ...(state.resumeData.customSections || []),
+              {
+                id: uuidv4(),
+                title: 'New Section',
+                items: [{
+                  id: uuidv4(),
+                  title: '',
+                  description: ''
+                }]
+              },
+            ],
+          },
+        })),
+      
+      updateCustomSection: (id, section) =>
+        set((state) => {
+          const customSections = state.resumeData.customSections || [];
+          return {
+            resumeData: {
+              ...state.resumeData,
+              customSections: customSections.map((s) =>
+                s.id === id ? { ...s, ...section } : s
+              ),
+            },
+          };
+        }),
+      
+      removeCustomSection: (id) =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            customSections: state.resumeData.customSections?.filter((s) => s.id !== id) || [],
+          },
+        })),
+        
+      addCustomSectionItem: (sectionId) =>
+        set((state) => {
+          const customSections = [...(state.resumeData.customSections || [])];
+          const sectionIndex = customSections.findIndex(s => s.id === sectionId);
+          
+          if (sectionIndex === -1) return state;
+          
+          customSections[sectionIndex] = {
+            ...customSections[sectionIndex],
+            items: [
+              ...customSections[sectionIndex].items,
+              {
+                id: uuidv4(),
+                title: '',
+                description: ''
+              }
+            ]
+          };
+          
+          return {
+            resumeData: {
+              ...state.resumeData,
+              customSections
+            }
+          };
+        }),
+        
+      updateCustomSectionItem: (sectionId, itemId, item) =>
+        set((state) => {
+          const customSections = [...(state.resumeData.customSections || [])];
+          const sectionIndex = customSections.findIndex(s => s.id === sectionId);
+          
+          if (sectionIndex === -1) return state;
+          
+          const items = [...customSections[sectionIndex].items];
+          const itemIndex = items.findIndex(i => i.id === itemId);
+          
+          if (itemIndex === -1) return state;
+          
+          items[itemIndex] = {
+            ...items[itemIndex],
+            ...item
+          };
+          
+          customSections[sectionIndex] = {
+            ...customSections[sectionIndex],
+            items
+          };
+          
+          return {
+            resumeData: {
+              ...state.resumeData,
+              customSections
+            }
+          };
+        }),
+        
+      removeCustomSectionItem: (sectionId, itemId) =>
+        set((state) => {
+          const customSections = [...(state.resumeData.customSections || [])];
+          const sectionIndex = customSections.findIndex(s => s.id === sectionId);
+          
+          if (sectionIndex === -1) return state;
+          
+          customSections[sectionIndex] = {
+            ...customSections[sectionIndex],
+            items: customSections[sectionIndex].items.filter(i => i.id !== itemId)
+          };
+          
+          return {
+            resumeData: {
+              ...state.resumeData,
+              customSections
+            }
+          };
+        }),
       
       setResumeData: (data) => set({ resumeData: data }),
       
